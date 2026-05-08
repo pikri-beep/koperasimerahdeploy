@@ -237,8 +237,9 @@ class TbpinjamanController extends Controller
     */
     public function approve($id)
     {
-        TbPinjaman::findOrFail($id)
-            ->update(['status' => 'disetujui']);
+       $pinjaman = TbPinjaman::findOrFail($id);
+       $pinjaman->update(['status' => 'disetujui']);
+       $pinjaman->generateCicilan();
 
         return back()->with('status', 'Pinjaman disetujui');
     }

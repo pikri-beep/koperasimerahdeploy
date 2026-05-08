@@ -1,13 +1,14 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\TbpinjamanController;
+use App\Http\Controllers\TbPinjamanController;
 use App\Http\Controllers\TbmodalController;
+use App\Http\Controllers\TbcicilanController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\TbModal;
-use App\Models\Tbpinjaman;
+use App\Models\TbPinjaman;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,7 +30,7 @@ Route::middleware(['auth', 'role:user'])->group(function () {
     // Dashboard utama user
     Route::get('/dashboard', function () {
         return view('dashboard.index', [
-            'totalPinjamanAktif' => Tbpinjaman::where('user_id', auth()->id())->count(),
+            'totalPinjamanAktif' => TbPinjaman::where('user_id', auth()->id())->count(),
             'totalModal' => TbModal::sum('simpanan_pokok')
                           + TbModal::sum('simpanan_wajib')
                           + TbModal::sum('simpanan_sementara'),
@@ -49,9 +50,9 @@ Route::middleware(['auth', 'role:user'])->group(function () {
             return view('dashboard.penarikan');
         })->name('penarikan');
 
-        Route::get('/cicilan', function () {
-            return view('dashboard.cicilan');
-        })->name('cicilan');
+        Route::get('/cicilan', [TbcicilanController::class, 'index'])->name('cicilan');
+        Route::post('/cicilan/{id}/bukti', [TbcicilanController::class, 'uploadBukti'])->name('cicilan.bukti');
+
 
 
         /*
@@ -133,20 +134,18 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 Route::prefix('admin')->group(function () {
 
     // HALAMAN PINJAMAN
-    Route::get('/pinjaman', [TbpinjamanController::class, 'index'])
+    Route::get('/pinjaman', [TbPinjamanController::class, 'index'])
         ->name('admin.pinjaman');
 
     // APPROVE
-    Route::post('/pinjaman/{id}/approve', [TbpinjamanController::class, 'approve'])
+    Route::post('/pinjaman/{id}/approve', [TbPinjamanController::class, 'approve'])
         ->name('admin.pinjaman.approve');
 
     // DENY
-    Route::post('/pinjaman/{id}/deny', [TbpinjamanController::class, 'deny'])
+    Route::post('/pinjaman/{id}/deny', [TbPinjamanController::class, 'deny'])
         ->name('admin.pinjaman.deny');
 
-        Route::get('/cicilan', function () {
-        return view('admin.cicilan');
-    })->name('admin.cicilan');
+
 
     Route::get('/penarikan', function () {
         return view('admin.penarikan');
@@ -173,6 +172,23 @@ Route::prefix('admin')->group(function () {
 
         Route::put('/modal/{id}/reject', [TbmodalController::class, 'reject'])->name('admin.modal.reject');
     });
+
+    Route::prefix('admin')->group(function () {
+
+        Route::get('/cicilan', [TbcicilanController::class, 'adminIndex'])
+            ->name('admin.cicilan');
+
+        Route::post('/cicilan/{id}/konfirmasi', [TbcicilanController::class, 'konfirmasi'])
+            ->name('admin.cicilan.konfirmasi');
+
+        Route::post('/cicilan/{id}/tolak', [TbcicilanController::class, 'tolak'])
+            ->name('admin.cicilan.tolak');
+
+        Route::post('/cicilan/terlambat', [TbcicilanController::class, 'tandaiTerlambat'])
+            ->name('admin.cicilan.terlambat');
+
+        });
+
 
 
     /*
